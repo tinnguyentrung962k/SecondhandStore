@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SecondhandStore.EntityRequest;
+using SecondhandStore.EntityViewModel;
 using SecondhandStore.Models;
 using SecondhandStore.Services;
 
@@ -13,9 +14,13 @@ namespace SecondhandStore.Controllers
     {
         private readonly ExchangeRequestService _exchangeRequestService;
         private readonly IMapper _mapper;
-        public ExchangeRequestController(ExchangeRequestService exchangeRequestService, IMapper mapper)
+        private readonly ExchangeOrderService _exchangeOrderService;
+        private readonly AccountService _accountService;
+        public ExchangeRequestController(ExchangeRequestService exchangeRequestService,ExchangeOrderService exchangeOrderService,AccountService accountService ,IMapper mapper)
         {
             _exchangeRequestService = exchangeRequestService;
+            _exchangeOrderService = exchangeOrderService;
+            _accountService = accountService;
             _mapper = mapper;
         }
 
@@ -42,15 +47,34 @@ namespace SecondhandStore.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateNewTopUp(ExchangeRequestCreateRequest exchangeRequestCreateRequest)
+        public async Task<IActionResult> CreateRequest(string id)
         {
+            var account = _accountService.GetAccountById(id);
+            ExchangeRequestCreateRequest exchangeRequestCreateRequest = new ExchangeRequestCreateRequest();
             var mappedRequest = _mapper.Map<ExchangeRequest>(exchangeRequestCreateRequest);
 
             await _exchangeRequestService.AddRequest(mappedRequest);
 
+            ExchangeOrderEntityViewModel exchangeOrder = new ExchangeOrderEntityViewModel {
+                AccountId = exchangeRequestCreateRequest.SellerId,
+                PostId = exchangeRequestCreateRequest.PostId,
+                OrderDate = DateTime.Now,
+                OrderStatus = false,
+                ReceiverEmail = account.Id,
+
+            };
+
+            var mappedOrder = _mapper.Map<ExchangeOrder>(exchangeOrderCreateRequest);
+
+            await _exchangeOrderService.AddOrder(mappedOrder);
+
             return CreatedAtAction(nameof(GetRequestList),
                 new { id = mappedRequest.RequestDetailId },
                 mappedRequest);
+
+           
+
+            
         }
     }
 }
