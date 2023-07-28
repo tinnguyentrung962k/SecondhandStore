@@ -3,43 +3,29 @@ using SecondhandStore.Infrastructure;
 
 namespace SecondhandStore.Repository.BaseRepository;
 
-using System.Collections.Generic;
-
 public abstract class BaseRepository<TEntity> where TEntity : class
 {
     private readonly SecondhandStoreContext _dbContext;
+    
 
     protected BaseRepository(SecondhandStoreContext dbContext)
     {
         _dbContext = dbContext;
     }
-
-    public async Task<List<TEntity>> GetAll()
+ 
+    public IQueryable<TEntity> GetAll()
     {
         try
         {
-            return await _dbContext.Set<TEntity>().ToListAsync();
+            return _dbContext.Set<TEntity>();
         }
         catch (Exception ex)
         {
             throw new Exception($"Error getting entity: {ex.Message}", ex);
         }
     }
-
+    
     public async Task<TEntity?> GetById(string id)
-    {
-        try
-        {
-            var entity =  await _dbContext.Set<TEntity>().FindAsync(id);
-            _dbContext.Entry(entity).State = EntityState.Detached;
-            return entity;
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error getting entity: {ex.Message}", ex);
-        }
-    }
-    public async Task<TEntity?> GetByIntId(int id)
     {
         try
         {
@@ -53,6 +39,20 @@ public abstract class BaseRepository<TEntity> where TEntity : class
         }
     }
     
+    public async Task<TEntity?> GetByIntId(int id)
+    {
+        try
+        {
+            var entity = await _dbContext.Set<TEntity>().FindAsync(id);
+            _dbContext.Entry(entity).State = EntityState.Detached;
+            return entity;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error getting entity: {ex.Message}", ex);
+        }
+    }
+
 
     public async Task Add(TEntity entity)
     {
@@ -70,7 +70,7 @@ public abstract class BaseRepository<TEntity> where TEntity : class
     public async Task Update(TEntity entity)
     {
         try
-        {
+        {            
             _dbContext.Set<TEntity>().Update(entity);
             await _dbContext.SaveChangesAsync();
         }
@@ -92,5 +92,4 @@ public abstract class BaseRepository<TEntity> where TEntity : class
             throw new Exception($"Error deleting entity: {ex.Message}", ex);
         }
     }
-    
 }

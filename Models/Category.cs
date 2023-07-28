@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 
-#nullable disable
-
 namespace SecondhandStore.Models
 {
     public partial class Category
@@ -13,7 +11,8 @@ namespace SecondhandStore.Models
         }
 
         public int CategoryId { get; set; }
-        public string CategoryName { get; set; }
+        public string CategoryName { get; set; } = null!;
+        public int CategoryValue { get; set; }
 
         public virtual ICollection<Post> Posts { get; set; }
     }
